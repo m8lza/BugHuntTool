@@ -1,24 +1,23 @@
-local owner = "m8lzas"
-local branch = "main"
+-- init.lua
+local owner = "m8lza" -- تأكد من مطابقة اسم حسابك
+local repo = "BugHuntTool"
+local path = "bughunttool"
 
 local function import(file)
-    local url = string.format("https://raw.githubusercontent.com/%s/BugHuntTool/%s/%s.lua", owner, branch, file)
-    local success, result = pcall(function() return game:HttpGet(url) end)
+    local url = string.format("https://raw.githubusercontent.com/%s/%s/main/%s/%s.lua", owner, repo, path, file)
+    local success, content = pcall(game.HttpGet, game, url)
     if success then
-        return loadstring(result)()
+        return loadstring(content)()
     else
-        warn("فشل تحميل الملف: " .. file)
+        warn("خطأ في تحميل الموديل: " .. file)
     end
 end
 
--- تعريف جدول عالمي لتخزين البيانات
+-- إعداد الجدول العالمي للبيانات
 _G.BugHunter = {
-    Logs = {},
-    Settings = { SpyActive = true }
+    Settings = { SpyActive = true },
+    Logs = {}
 }
 
--- تحميل المكونات بترتيب
-import("UI/MainInterface")
-import("Classes/Sniffer")
-
-print("BugHuntTool تم التحميل بنجاح!")
+import("MainInterface")
+import("Sniffer")
