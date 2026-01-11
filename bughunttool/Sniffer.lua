@@ -1,5 +1,4 @@
-local Sniffer = {}
-
+-- Sniffer.lua
 local mt = getrawmetatable(game)
 local oldNamecall = mt.__namecall
 setreadonly(mt, false)
@@ -9,20 +8,21 @@ mt.__namecall = newcclosure(function(self, ...)
     local args = {...}
 
     if _G.BugHunter.Settings.SpyActive and (method == "FireServer" or method == "InvokeServer") then
-        -- إرسال البيانات للواجهة (نستخدم Events أو نحدث جدولاً)
-        table.insert(_G.BugHunter.Logs, {
-            Name = self.Name,
-            Path = self:GetFullName(),
-            Args = args,
-            Time = os.date("%X")
-        })
+        -- تنسيق البيانات للعرض
+        local argString = ""
+        for i, v in pairs(args) do
+            argString = argString .. string.format("[%d]: %s ", i, tostring(v))
+        end
         
-        -- إشعار (اختياري)
-        print("Captured: " .. self.Name)
+        local info = string.format("Path: %s\nArgs: %s", self:GetFullName(), argString)
+        
+        -- إرسال البيانات للواجهة
+        if _G.BugHunter.AddLog then
+            _G.BugHunter.AddLog(self.Name, info)
+        end
     end
 
     return oldNamecall(self, ...)
 end)
 
 setreadonly(mt, true)
-return Sniffer
