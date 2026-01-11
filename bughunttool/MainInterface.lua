@@ -1,3 +1,4 @@
+-- MainInterface.lua
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
@@ -13,11 +14,19 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "الإعدادات", Icon = "settings" })
 }
 
--- إضافة قائمة لعرض الـ Remotes المكتشفة
+-- قسم عرض النتائج
 local LogSection = Tabs.Main:AddSection("سجل التواصل (Remotes)")
 
+-- وظيفة لإضافة النتائج للواجهة
+_G.BugHunter.AddLog = function(name, info)
+    Tabs.Main:AddParagraph({
+        Title = "Captured: " .. name,
+        Content = info
+    })
+end
+
 Tabs.Settings:AddToggle("SpyToggle", {
-    Title = "تفعيل الرصد",
+    Title = "تفعيل الرصد المباشر",
     Default = true,
     Callback = function(Value)
         _G.BugHunter.Settings.SpyActive = Value
