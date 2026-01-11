@@ -1,50 +1,40 @@
--- Sniffer.lua (Pro Version)
-local Sniffer = {}
+-- Sniffer.lua (المطور)
 local LogSection = _G.BugHunter.LogSection
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
 
--- دالة لتنسيق البيانات بشكل جميل مثل Hydroxide
-local function formatArgs(args)
-    local out = ""
+-- دالة لتنظيف وعرض البيانات بشكل احترافي
+local function logRemote(self, method, args)
+    if not _G.BugHunter.Settings.SpyActive then return end
+    
+    local name = self.Name
+    local path = self:GetFullName()
+    local data = ""
+    
     for i, v in pairs(args) do
-        out = out .. string.format("[%d] %s (%s)\n", i, tostring(v), typeof(v))
+        data = data .. string.format("[%d]: %s (%s)\n", i, tostring(v), typeof(v))
     end
-    return out == "" and "No Arguments" or out
+
+    if _G.BugHunter.LogSection then
+        _G.BugHunter.LogSection:AddParagraph({
+            Title = "📡 " .. method .. ": " .. name,
+            Content = "📍 Path: " .. path .. "\n📝 Args:\n" .. (data ~= "" and data or "No Data")
+        })
+    end
+    print("Captured: " .. name) -- للتأكد من العمل في F9
 end
 
--- رصد RemoteEvents (FireServer)
-local oldFireServer
-oldFireServer = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     local args = {...}
 
-    if _G.BugHunter.Settings.SpyActive and (method == "FireServer" or method == "fireServer") then
-        local remoteName = self.Name
-        local remotePath = self:GetFullName()
-        local formattedData = formatArgs(args)
-
-        -- إرسال للواجهة
-        if _G.BugHunter.LogSection then
-            _G.BugHunter.LogSection:AddParagraph({
-                Title = "📡 Event: " .. remoteName,
-                Content = "📍 Path: " .. remotePath .. "\n📝 Args:\n" .. formattedData
-            })
-        end
-        print("Captured Event: " .. remoteName) -- للتأكد في F9
+    -- رصد FireServer و InvokeServer (بكل حالات الأحرف)
+    if method:lower() == "fireserver" or method:lower() == "invokeserver" then
+        logRemote(self, method, args)
     end
-    return oldNamecall(self, ...) -- تأكد من تعريف oldNamecall عالمياً أو استخدم hookfunction
-end))
 
--- رصد RemoteFunctions (InvokeServer)
-local oldInvokeServer
-oldInvokeServer = hookfunction(Instance.new("RemoteFunction").InvokeServer, newcclosure(function(self, ...)
-    if _G.BugHunter.Settings.SpyActive then
-        local args = {...}
-        _G.BugHunter.LogSection:AddParagraph({
-            Title = "📞 Function: " .. self.Name,
-            Content = "📍 Path: " .. self:GetFullName() .. "\n📝 Args:\n" .. formatArgs(args)
-        })
-    end
-    return oldInvokeServer(self, ...)
-end))
+    return oldNamecall(self, ...)
+end)
 
-return Sniffer
+setreadonly(mt, true)
